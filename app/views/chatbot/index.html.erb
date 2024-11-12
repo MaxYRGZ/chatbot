@@ -4,10 +4,13 @@
   <div class="chat-input">
     <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
     <button id="send-message" class="btn btn-primary">Enviar</button>
-    <button id="start-listening" class="btn btn-secondary">Escuchar</button>
+    <button id="start-listening" class="btn btn-secondary">
+      <span id="listening-text">Escuchar</span>
+    </button>
     <button id="speak-response" class="btn btn-info">Hablar respuesta</button>
   </div>
   <div id="chatbot-response" class="chatbot-response"></div>
+  <div id="listening-indicator" class="listening-indicator"></div>
 </div>
 
 <style>
@@ -97,15 +100,51 @@
 #chat-messages p:nth-child(even) {
   background-color: #f0f0f0;
 }
+
+.listening-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #dc3545;
+  margin: 10px auto;
+  display: none;
+}
+
+.listening-indicator.active {
+  display: block;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', (event) => {
-  document.getElementById('send-message').addEventListener('click', () => {
-    const input = document.getElementById('chatbot-input');
-    const message = input.value;
-    input.value = '';
+  const chatMessages = document.getElementById('chat-messages');
+  const chatbotInput = document.getElementById('chatbot-input');
+  const sendButton = document.getElementById('send-message');
+  const startListeningButton = document.getElementById('start-listening');
+  const speakResponseButton = document.getElementById('speak-response');
+  const listeningText = document.getElementById('listening-text');
+  const chatbotResponse = document.getElementById('chatbot-response');
+  const listeningIndicator = document.getElementById('listening-indicator');
 
+  function sendMessage(message) {
     fetch('/chatbot/send_message', {
       method: 'POST',
       headers: {
@@ -116,27 +155,54 @@ document.addEventListener('DOMContentLoaded', (event) => {
     })
     .then(response => response.json())
     .then(data => {
-      document.getElementById('chat-messages').innerHTML += `<p>Tú: ${message}</p><p>Bot: ${data.response}</p>`;
-      document.getElementById('chatbot-response').innerText = data.response;
+      chatMessages.innerHTML += `<p>Tú: ${message}</p><p>Bot: ${data.response}</p>`;
+      chatbotResponse.innerText = data.response;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     });
+  }
+
+  sendButton.addEventListener('click', () => {
+    const message = chatbotInput.value;
+    if (message.trim() !== '') {
+      sendMessage(message);
+      chatbotInput.value = '';
+    }
+  });
+
+  chatbotInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendButton.click();
+    }
   });
 
   // Código para reconocimiento de voz
-  const recognition = new webkitSpeechRecognition();
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = 'es-ES';
+  recognition.continuous = false;
+  recognition.interimResults = false;
 
-  document.getElementById('start-listening').addEventListener('click', () => {
+  startListeningButton.addEventListener('click', () => {
     recognition.start();
+    listeningText.textContent = 'Escuchando...';
+    listeningIndicator.classList.add('active');
   });
 
   recognition.onresult = function(event) {
     const transcript = event.results[0][0].transcript;
-    document.getElementById('chatbot-input').value = transcript;
+    chatbotInput.value = transcript;
+    listeningText.textContent = 'Escuchar';
+    listeningIndicator.classList.remove('active');
+    sendMessage(transcript);
+  };
+
+  recognition.onend = function() {
+    listeningText.textContent = 'Escuchar';
+    listeningIndicator.classList.remove('active');
   };
 
   // Código para síntesis de voz
-  document.getElementById('speak-response').addEventListener('click', () => {
-    const response = document.getElementById('chatbot-response').innerText;
+  speakResponseButton.addEventListener('click', () => {
+    const response = chatbotResponse.innerText;
     const utterance = new SpeechSynthesisUtterance(response);
     utterance.lang = 'es-ES';
     window.speechSynthesis.speak(utterance);
