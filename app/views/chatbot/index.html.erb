@@ -1,11 +1,103 @@
-<div id="chatbot">
-  <div id="chat-messages"></div>
-  <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
-  <button id="send-message">Enviar</button>
-  <button id="start-listening">Escuchar</button>
-  <button id="speak-response">Hablar respuesta</button>
-  <div id="chatbot-response"></div>
+<div id="chatbot" class="chatbot-container">
+  <h2 class="chatbot-title">Asistente de Ventas</h2>
+  <div id="chat-messages" class="chat-messages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
+    <button id="send-message" class="btn btn-primary">Enviar</button>
+    <button id="start-listening" class="btn btn-secondary">Escuchar</button>
+    <button id="speak-response" class="btn btn-info">Hablar respuesta</button>
+  </div>
+  <div id="chatbot-response" class="chatbot-response"></div>
 </div>
+
+<style>
+.chatbot-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+}
+
+.chatbot-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #fff;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+
+.chatbot-response {
+  background-color: #e9ecef;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+#chat-messages p {
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+#chat-messages p:nth-child(odd) {
+  background-color: #e6f2ff;
+  text-align: right;
+}
+
+#chat-messages p:nth-child(even) {
+  background-color: #f0f0f0;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', (event) => {
