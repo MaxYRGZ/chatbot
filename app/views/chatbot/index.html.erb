@@ -1,0 +1,53 @@
+<div id="chatbot">
+  <div id="chat-messages"></div>
+  <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
+  <button id="send-message">Enviar</button>
+  <button id="start-listening">Escuchar</button>
+  <button id="speak-response">Hablar respuesta</button>
+  <div id="chatbot-response"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  document.getElementById('send-message').addEventListener('click', () => {
+    const input = document.getElementById('chatbot-input');
+    const message = input.value;
+    input.value = '';
+
+    fetch('/chatbot/send_message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('chat-messages').innerHTML += `<p>Tú: ${message}</p><p>Bot: ${data.response}</p>`;
+      document.getElementById('chatbot-response').innerText = data.response;
+    });
+  });
+
+  // Código para reconocimiento de voz
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'es-ES';
+
+  document.getElementById('start-listening').addEventListener('click', () => {
+    recognition.start();
+  });
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    document.getElementById('chatbot-input').value = transcript;
+  };
+
+  // Código para síntesis de voz
+  document.getElementById('speak-response').addEventListener('click', () => {
+    const response = document.getElementById('chatbot-response').innerText;
+    const utterance = new SpeechSynthesisUtterance(response);
+    utterance.lang = 'es-ES';
+    window.speechSynthesis.speak(utterance);
+  });
+});
+</script>
