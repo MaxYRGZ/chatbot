@@ -4,13 +4,22 @@
   <div class="chat-input">
     <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
     <button id="send-message" class="btn btn-primary">Enviar</button>
-    <button id="start-listening" class="btn btn-secondary">Escuchar</button>
+    <button id="start-listening" class="btn btn-secondary">
+      <span id="listening-text">Escuchar</span>
+    </button>
     <button id="speak-response" class="btn btn-info">Hablar respuesta</button>
   </div>
   <div id="chatbot-response" class="chatbot-response"></div>
-  <div id="listening-status" class="listening-status"></div>
+  <div id="listening-indicator" class="listening-indicator"></div>
+  <div id="avatar-container" class="avatar-container">
+    <svg id="bot-avatar" width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#007bff" />
+      <circle cx="35" cy="40" r="5" fill="white" />
+      <circle cx="65" cy="40" r="5" fill="white" />
+      <path id="mouth" d="M 30 70 Q 50 80 70 70" stroke="white" stroke-width="3" fill="none" />
+    </svg>
+  </div>
 </div>
-
 
 <style>
 .chatbot-container {
@@ -130,12 +139,17 @@
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
   }
 }
-.listening-status {
+
+.avatar-container {
   text-align: center;
-  margin-top: 10px;
-  font-style: italic;
-  color: #6c757d;
+  margin-top: 20px;
 }
+
+#bot-avatar {
+  width: 100px;
+  height: 100px;
+}
+
 </style>
 
 <script>
@@ -145,8 +159,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
   const sendButton = document.getElementById('send-message');
   const startListeningButton = document.getElementById('start-listening');
   const speakResponseButton = document.getElementById('speak-response');
+  const listeningText = document.getElementById('listening-text');
   const chatbotResponse = document.getElementById('chatbot-response');
-  const listeningStatus = document.getElementById('listening-status');
+  const listeningIndicator = document.getElementById('listening-indicator');
+  const mouth = document.getElementById('mouth');
 
   function sendMessage(message) {
     fetch('/chatbot/send_message', {
@@ -187,30 +203,58 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   startListeningButton.addEventListener('click', () => {
     recognition.start();
-    listeningStatus.textContent = "Escuchando...";
+    listeningText.textContent = 'Escuchando...';
+    listeningIndicator.classList.add('active');
   });
 
   recognition.onresult = function(event) {
     const transcript = event.results[0][0].transcript;
     chatbotInput.value = transcript;
-    listeningStatus.textContent = "Procesando...";
+    listeningText.textContent = 'Escuchar';
+    listeningIndicator.classList.remove('active');
     sendMessage(transcript);
   };
 
   recognition.onend = function() {
-    listeningStatus.textContent = "";
+    listeningText.textContent = 'Escuchar';
+    listeningIndicator.classList.remove('active');
   };
 
-  recognition.onerror = function(event) {
-    console.error('Error en el reconocimiento de voz:', event.error);
-    listeningStatus.textContent = "Error en el reconocimiento de voz. Intenta de nuevo.";
-  };
-
-  // Código para síntesis de voz
   speakResponseButton.addEventListener('click', () => {
     const response = chatbotResponse.innerText;
     const utterance = new SpeechSynthesisUtterance(response);
     utterance.lang = 'es-ES';
+    
+    let talking = true;
+    let mouthOpen = false;
+    
+    // Función para alternar la boca entre abierta (círculo) y cerrada (línea curva)
+    function animateMouth() {
+      if (!talking) return;
+
+      if (mouthOpen) {
+        // Boca cerrada: una línea curva
+        mouth.setAttribute("d", "M 30 70 Q 50 80 70 70");
+      } else {
+        // Boca abierta: un círculo pequeño en el centro de la boca
+        mouth.setAttribute("d", "M 45 70 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0");
+      }
+      
+      mouthOpen = !mouthOpen;
+      setTimeout(() => requestAnimationFrame(animateMouth), 200);
+    }
+    
+    utterance.onstart = () => {
+      talking = true;
+      animateMouth();
+    };
+
+    utterance.onend = () => {
+      talking = false;
+      // Restablecer a boca cerrada al terminar
+      mouth.setAttribute("d", "M 30 70 Q 50 80 70 70");
+    };
+
     window.speechSynthesis.speak(utterance);
   });
 });
