@@ -1,24 +1,19 @@
 <div id="chatbot" class="chatbot-container">
-  <h2 class="chatbot-title">Asistente de Ventas</h2>
+  <h2 class="chatbot-title">Sales Assistant</h2>
   <div id="chat-messages" class="chat-messages"></div>
   <div class="chat-input">
-    <input type="text" id="chatbot-input" placeholder="Escribe tu mensaje...">
-    <button id="send-message" class="btn btn-primary">Enviar</button>
+    <input type="text" id="chatbot-input" placeholder="Type your message...">
+    <button id="send-message" class="btn btn-primary">Send</button>
     <button id="start-listening" class="btn btn-secondary">
-      <span id="listening-text">Escuchar</span>
+      <span id="listening-text">Listen</span>
     </button>
-    <button id="speak-response" class="btn btn-info">Hablar respuesta</button>
-    <a href="/" class="btn btn-danger">Salir</a>
+    <button id="speak-response" class="btn btn-info">Speak response</button>
+    <a href="/" class="btn btn-danger">Exit</a>
   </div>
   <div id="chatbot-response" class="chatbot-response"></div>
   <div id="listening-indicator" class="listening-indicator"></div>
   <div id="avatar-container" class="avatar-container">
-    <svg id="bot-avatar" width="100" height="100" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="45" fill="#007bff" />
-      <circle cx="35" cy="40" r="5" fill="white" />
-      <circle cx="65" cy="40" r="5" fill="white" />
-      <path id="mouth" d="M 30 70 Q 50 80 70 70" stroke="white" stroke-width="3" fill="none" />
-    </svg>
+    <img id="bot-avatar" src="/assets/bot.jpg" alt="Bot Avatar" width="100" height="100">
   </div>
 </div>
 
@@ -159,6 +154,7 @@
 </style>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', (event) => {
   const chatMessages = document.getElementById('chat-messages');
   const chatbotInput = document.getElementById('chatbot-input');
@@ -169,6 +165,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   const chatbotResponse = document.getElementById('chatbot-response');
   const listeningIndicator = document.getElementById('listening-indicator');
   const mouth = document.getElementById('mouth');
+  const botAvatar = document.getElementById('bot-avatar');
 
   function sendMessage(message) {
     fetch('/chatbot/send_message', {
@@ -226,42 +223,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
     listeningIndicator.classList.remove('active');
   };
 
+  // Handle speech synthesis 
   speakResponseButton.addEventListener('click', () => {
     const response = chatbotResponse.innerText;
     const utterance = new SpeechSynthesisUtterance(response);
-    utterance.lang = 'es-ES';
-    
-    let talking = true;
-    let mouthOpen = false;
-    
-    // Función para alternar la boca entre abierta (círculo) y cerrada (línea curva)
-    function animateMouth() {
-      if (!talking) return;
+    utterance.lang = 'en-US';
 
-      if (mouthOpen) {
-        // Boca cerrada: una línea curva
-        mouth.setAttribute("d", "M 30 70 Q 50 80 70 70");
-      } else {
-        // Boca abierta: un círculo pequeño en el centro de la boca
-        mouth.setAttribute("d", "M 45 70 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0");
-      }
-      
-      mouthOpen = !mouthOpen;
-      setTimeout(() => requestAnimationFrame(animateMouth), 200);
-    }
-    
     utterance.onstart = () => {
-      talking = true;
-      animateMouth();
+      botAvatar.src = '/assets/avatar.gif';
     };
 
     utterance.onend = () => {
-      talking = false;
-      // Restablecer a boca cerrada al terminar
-      mouth.setAttribute("d", "M 30 70 Q 50 80 70 70");
+      botAvatar.src = '/assets/bot.jpg';
     };
 
     window.speechSynthesis.speak(utterance);
-  });
+  });
+
 });
 </script>
